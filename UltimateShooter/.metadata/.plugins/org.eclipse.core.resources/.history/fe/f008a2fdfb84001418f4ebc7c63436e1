@@ -1,0 +1,95 @@
+package Panels;
+
+import java.awt.Button;
+import java.awt.CardLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Label;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+
+import Enums.Balls;
+import Enums.GameMode;
+import Enums.MenyStatus;
+import Start.Window;
+
+public class SettingsPanel extends JPanel implements ActionListener {
+
+	Window frame;
+	JPanel settingpan = new JPanel();
+	JPanel gridpanel = new JPanel(new GridLayout(8, 1));
+	Label title = new Label("Settings");
+	Button back = new Button("Back");
+	Button start = new Button("Start");
+	Label level = new Label("Level");
+	JSlider l = new JSlider(JSlider.HORIZONTAL, 2, 10, 5);
+	JSlider t = new JSlider(JSlider.HORIZONTAL, 10, 1000, 60);
+	Label time = new Label("Time");
+
+	JComboBox<GameMode> cb = new JComboBox<GameMode>(
+			new DefaultComboBoxModel<>(GameMode.values()));
+
+	public SettingsPanel(Window _frame) {
+
+		frame = _frame;
+
+		makeSettingPanel();
+
+		add(settingpan);
+
+		start.addActionListener(this);
+		back.addActionListener(this);
+	}
+
+	private void makeSettingPanel() {
+		l.setMajorTickSpacing(10);
+		l.setMinorTickSpacing(1);
+		l.setPaintTicks(true);
+		l.setPaintLabels(true);
+
+		t.setMajorTickSpacing(10);
+		t.setMinorTickSpacing(1);
+		t.setPaintTicks(true);
+		t.setPaintLabels(true);
+
+		settingpan.setLayout(new FlowLayout());
+		gridpanel.add(title);
+		gridpanel.add(back);
+		gridpanel.add(start);
+		gridpanel.add(level);
+		gridpanel.add(l);
+		gridpanel.add(time);
+		gridpanel.add(t);
+		gridpanel.add(cb);
+		settingpan.add(gridpanel);
+
+	}
+	
+	public GameMode getGameMode(){
+		return (GameMode) cb.getSelectedItem();
+	}
+	public int getTime(){
+		return t.getValue();
+	}
+	public int getLevel(){
+		return l.getValue();
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+	
+		switch(e.getActionCommand()){
+		case "Back" : 
+			frame.changePanel(MenyStatus.MAINPANEL);
+			break;
+		case "Start": 
+			frame.changePanel(MenyStatus.GAMEPANEL);
+			break;
+		}
+	}
+}

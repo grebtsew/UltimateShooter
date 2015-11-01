@@ -1,0 +1,32 @@
+package Maps;
+
+	public class SortPoint {
+	
+	    private int x, y;
+	 
+	    public SortPoint(String name, int age) {
+	        this.name = name;
+	        this.age = age;
+	    }
+	 
+	    public static final Comparator<Person> NAME_COMP = new Comparator<Person>() {
+	        public int compare(Person o1, Person o2) {
+	            return o1.name.compareTo(o2.name);
+	        }
+	    };
+	 
+	    public static final Comparator<Person> AGE_COMP = new Comparator<Person>() {
+	        public int compare(Person o1, Person o2) {
+	            return o1.age - o2.age;
+	        }
+	    };
+	 
+	    public String getName() {return name;}
+	    public int getAge() {return age;}
+	 
+	    @Override
+	    public String toString() {
+	        return String.format("%s - %d", name, age);
+	    }
+	}
+}

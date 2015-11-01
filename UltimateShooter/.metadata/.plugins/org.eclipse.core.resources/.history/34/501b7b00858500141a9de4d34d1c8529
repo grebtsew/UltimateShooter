@@ -1,0 +1,1101 @@
+package Game;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Label;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JComponent;
+
+import Editor.Editor;
+import Editor.FileEditor;
+import Enums.Balls;
+import Enums.Directions;
+import Enums.GameMode;
+import Maps.Map;
+
+public class Game extends JComponent implements Runnable, MouseListener {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	ArrayList<ArrayList<Directions>> balldirections = new ArrayList<ArrayList<Directions>>();
+	ArrayList<ArrayList<ArrayList<Directions>>> balldirectionsTemp = new ArrayList<ArrayList<ArrayList<Directions>>>();
+	ArrayList<Point> movedballs = new ArrayList<Point>();
+	ArrayList<Map> maplist = new ArrayList<Map>();
+	int TIME_X = 100;
+	int TIME_Y = 350;
+	int DISP_Y = 30;
+	boolean dontsave = false;
+	ArrayList<ArrayList<Point>> balltemps = new ArrayList<ArrayList<Point>>();
+	List<Map> tempMaps = new ArrayList<Map>();
+	Balls focusedball;
+	String timeLabel;
+	Editor editor = new Editor();
+	Point mousein, mouseout;
+	boolean GameOver = false;
+	Map map = new Map(10, 10);
+	Map nextmap = new Map(10, 10);
+	int rectsize = 30;
+	boolean moving = false;
+	boolean readMouse = false;
+	Directions direction;
+	Point focusedpos;
+	int balls_to_move;
+	int s_x = 0, s_y = 0;
+	int speed = 3;
+	ArrayList<Point> balls_to_fix;
+	Point movingball;
+	int tempsize = 0;
+	boolean dontmove = false;
+	boolean nohit = false;
+	Point startmoving;
+	GameMode gamemode;
+	boolean lastonlevel = false;
+	int mapnumber = 0;
+	FileEditor fe = new FileEditor();
+	long tStart;
+	double timeLeft = 0;
+	int gameLevel = 0;
+	Label score = new Label("Score: " + mapnumber);
+	int skipvar = 0;
+
+	public Game(GameMode _gm, int _level, int _time) {
+		System.out.println(_gm + " " + _level + " " + _time);
+		gamemode = _gm;
+
+		getSettings(3, 50);
+
+		addMouseListener(this);
+		
+
+		if (_gm != GameMode.SOLVER) {
+			init();
+			tStart = System.currentTimeMillis();
+			Thread t = new Thread(this);
+			t.start();
+		}
+	}
+
+	public void next() {
+		if(gamemode == GameMode.TIMER){
+		skipvar++;
+		nextmap();
+		} else {
+		skipvar++;
+		mapnumber++;
+		init();		
+		}
+	}
+
+	public void getSettings(int _level, long _timeLeft) {
+		gameLevel = _level;
+		timeLeft = _timeLeft;
+	}
+
+	public void setMap(Map _map) {
+
+		map = _map;
+		saveTemp(map);
+		fixidenticalmap(map, nextmap);
+	}
+
+	private void init() {
+
+		focusedball = null;
+		focusedpos = null;
+		dontsave = false;
+		tempMaps.clear();
+
+		moving = false;
+		readMouse = false;
+		dontmove = false;
+		nohit = false;
+
+		map = new Map(10, 10);
+
+		switch (gamemode) {
+
+		case EDITORTEST:
+
+			if (fe.openMap(Integer.toString(mapnumber)) == null) {
+				System.out.println("All maps done!");
+			} else {
+				map = fe.openMap(Integer.toString(mapnumber));
+				
+
+				nextmap = new Map(10, 10);
+
+				// createmap();
+				saveTemp(map);
+				fixidenticalmap(map, nextmap);
+				GameOver = true;
+			}
+			break;
+
+		case NORMAL:
+
+			if (fe.openMap(Integer.toString(mapnumber)) == null) {
+				System.out.println("All maps done!");
+			} else {
+				map = fe.openMap(Integer.toString(mapnumber));
+				
+
+				nextmap = new Map(10, 10);
+
+				// createmap();
+				saveTemp(map);
+				fixidenticalmap(map, nextmap);
+				GameOver = true;
+			}
+			break;
+		case TIMER:
+			editor.autocreate(25, this.gameLevel, false);
+			maplist = editor.getAutoMaps();
+			nextmap = new Map(10, 10);
+
+			// createmap();
+			nextmap();
+
+			break;
+		default:
+			break;
+		}
+
+	}
+
+	private void fixidenticalmap(Map inmap, Map outmap) {
+		for (int i = 0; i < inmap.x; i++) {
+			for (int j = 0; j < inmap.y; j++) {
+				outmap.addball(i, j, inmap.getBall(i, j));
+			}
+		}
+	}
+
+	public void paintComponent(Graphics g) {
+		update(g);
+	}
+
+	public Color getFocusedBall(Balls b) {
+		switch (b) {
+		case SPEED:
+			return Color.YELLOW;
+
+		case EXPLODE:
+			return Color.PINK;
+
+		case FREEZE:
+			return Color.BLUE;
+
+		case NORMAL:
+			return Color.RED;
+
+		case EMPTY:
+			return Color.WHITE;
+		}
+		return null;
+	}
+
+	public void update(Graphics g) {
+
+		// paint board
+		g.setColor(Color.white);
+		g.fillRect(0, 0, map.x * rectsize, map.y * rectsize);
+
+		for (int i = 0; i < map.x; i++) {
+			for (int j = 0; j < map.y; j++) {
+				g.setColor(Color.black);
+				g.drawRect(i * rectsize, j * rectsize, rectsize, rectsize);
+				if (!map.isEmpty(i, j)) {
+
+					g.setColor(getFocusedBall(map.getBall(i, j)));
+					g.fillOval(i * rectsize, j * rectsize, rectsize, rectsize);
+				}
+			}
+		}
+		
+		g.drawString("Time : " + timeLabel, 100, 400);
+		g.drawString("Maps Completed : " + Integer.toString(mapnumber), 100, 430);
+		
+		// moving ball
+		if (moving) {
+			g.setColor(getFocusedBall(focusedball));
+			g.fillOval(s_x + focusedpos.x * rectsize, s_y + focusedpos.y
+					* rectsize, rectsize, rectsize);
+		}
+
+		// show all maps on the side
+		int k = 0;
+		int z = 0;
+		for (Map ma : tempMaps) {
+			k++;
+			if (k > 4) {
+				k = 0;
+				z++;
+			}
+
+			for (int i = 0; i < ma.x; i++) {
+				for (int j = 0; j < ma.y; j++) {
+					g.setColor(Color.black);
+					g.drawRect(i * rectsize + 400 * k, j * rectsize + z * 350,
+							rectsize, rectsize);
+					if (!ma.isEmpty(i, j)) {
+						// g.setColor(Color.RED);
+
+						g.setColor(getFocusedBall(ma.getBall(i, j)));
+						g.fillOval(i * rectsize + 400 * k, j * rectsize + z
+								* 350, rectsize, rectsize);
+					}
+
+				}
+			}
+		}
+
+	}
+
+	private Point getBoardPos(Point p) {
+		return new Point((int) p.x / rectsize, (int) p.y / rectsize);
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+
+
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+
+		if (!moving) {
+
+			focusedpos = getBoardPos(this.getMousePosition());
+			if (focusedpos.x < map.x && focusedpos.y < map.y) {
+				if (!map.isEmpty(focusedpos.x, focusedpos.y)) {
+
+					mousein = this.getMousePosition();
+					readMouse = true;
+				}
+			}
+		}
+	}
+
+	private boolean balls_next_to(Point pos, ArrayList<Point> m) {
+
+		if (m == null) {
+			return false;
+		}
+
+		for (Point pp : m) {
+			switch (direction) {
+
+			case UP:
+				if (Math.abs(focusedpos.y - pp.y) == 1) {
+					return true;
+				}
+				break;
+			case DOWN:
+				if (Math.abs(focusedpos.y - pp.y) == 1) {
+					return true;
+				}
+				break;
+			case LEFT:
+				if (Math.abs(focusedpos.x - pp.x) == 1) {
+					return true;
+				}
+				break;
+			case RIGHT:
+				if (Math.abs(focusedpos.x - pp.x) == 1) {
+					return true;
+				}
+				break;
+			default:
+				break;
+			}
+
+		}
+		return false;
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		if (readMouse) {
+
+			// ball to move
+			focusedball = map.getBall(focusedpos.x, focusedpos.y);
+
+			// get ball and how to move it
+			mouseout = this.getMousePosition();
+			direction = getDirection();
+
+			// get a list of each ball on the line
+			balls_to_fix = map.hitSome(direction, focusedpos);
+
+			// make sure balls to fix dont == null
+			if (balls_to_fix != null) {
+				balls_to_move = balls_to_fix.size();
+			} else {
+				balls_to_move = 0;
+			}
+
+			// check if there is balls next startpos
+			// if a collision
+			if (balls_to_fix != null
+					&& !balls_next_to(focusedpos, balls_to_fix)) {
+
+				// fixidenticalmap(nextmap);
+
+				movedballs.add(focusedpos);
+				// solve ball to fix and save new map
+				collisions(direction, focusedpos, balls_to_fix);
+
+				// save it
+				if (dontsave) {
+					dontsave = false;
+
+				} else {
+
+					saveTemp(nextmap);
+				}
+			} else {
+				nohit = true;
+			}
+
+			movingball = focusedpos;
+			focusedball = map.getBall(movingball.x, movingball.y);
+			moving = true;
+			readMouse = false;
+			map.removeball(movingball.x, movingball.y);
+			repaint();
+
+		}
+	}
+
+	public void back() {
+
+		if (!moving && GameOver) {
+
+			if (tempMaps.size() >= 2) {
+				// remove map
+				tempMaps.remove(tempMaps.size() - 1);
+				// System.out.println(movedballs);
+				movedballs.remove(movedballs.size() - 1);
+				// System.out.println(movedballs);
+
+				// get temp map
+				Map getmap = tempMaps.get(tempMaps.size() - 1);
+				map = new Map(map.x, map.y);
+				nextmap = new Map(map.x, map.y);
+				for (int i = 0; i < map.x; i++) {
+					for (int j = 0; j < map.y; j++) {
+						map.addball(i, j, getmap.getBall(i, j));
+						nextmap.addball(i, j, getmap.getBall(i, j));
+					}
+				}
+
+				repaint();
+			}
+
+		}
+		if (gamemode == GameMode.SOLVER) {
+			// System.out.println("hej");
+			// remove map
+			tempMaps.remove(tempMaps.size() - 1);
+
+			// get temp map
+			Map getmap = tempMaps.get(tempMaps.size() - 1);
+			map = new Map(map.x, map.y);
+			nextmap = new Map(map.x, map.y);
+			for (int i = 0; i < map.x; i++) {
+				for (int j = 0; j < map.y; j++) {
+					map.addball(i, j, getmap.getBall(i, j));
+					nextmap.addball(i, j, getmap.getBall(i, j));
+				}
+			}
+		}
+	}
+
+	private void saveTemp(Map _map) {
+		Map temp = new Map(_map.x, _map.y);
+		for (int i = 0; i < _map.x; i++) {
+			for (int j = 0; j < _map.y; j++) {
+				temp.addball(i, j, _map.getBall(i, j));
+			}
+		}
+
+		tempMaps.add(tempMaps.size(), temp);
+
+	}
+
+	private void collisions(Directions d, Point start, ArrayList<Point> points) {
+		// remove start from map
+		nextmap.removeball(start.x, start.y);
+
+		switch (d) {
+		case UP:
+			// snurra funktioner
+			for (Point p : points) {
+				// start at start
+				// if one directly break
+				if (Math.abs(p.y - start.y) == 1) {
+					dontsave = true;
+					return;
+				} else {
+					// move and place p
+					nextmap.addball(p.x, p.y + 1, focusedball);
+
+					focusedball = nextmap.getBall(p.x, p.y);
+
+					// if its last, remove p.
+					nextmap.removeball(p.x, p.y);
+				}
+			}
+
+			break;
+		case DOWN:
+			// snurra funktioner
+			for (Point p : points) {
+				// start at start
+				// if one directly break
+				if (Math.abs(p.y - start.y) == 1) {
+					dontsave = true;
+					break;
+				} else {
+
+					// move up and place under p
+					nextmap.addball(p.x, p.y - 1, focusedball);
+
+					focusedball = nextmap.getBall(p.x, p.y);
+
+					// if its last, remove p.
+					nextmap.removeball(p.x, p.y);
+				}
+			}
+			break;
+
+		case LEFT:
+			// snurra funktioner
+			for (Point p : points) {
+				// start at start
+				// if one directly break
+				if (Math.abs(p.x - start.x) == 1) {
+					dontsave = true;
+					break;
+				} else {
+					// move and place
+					nextmap.addball(p.x + 1, p.y, focusedball);
+
+					focusedball = nextmap.getBall(p.x, p.y);
+
+					// if its last, remove p.
+					nextmap.removeball(p.x, p.y);
+
+				}
+			}
+			break;
+		case RIGHT:
+			// snurra funktioner
+			for (Point p : points) {
+				// start at start
+				// if one directly break
+				if (Math.abs(p.x - start.x) == 1) {
+					dontsave = true;
+					break;
+				} else {
+
+					// move and place
+					nextmap.addball(p.x - 1, p.y, focusedball);
+
+					focusedball = nextmap.getBall(p.x, p.y);
+
+					// if its last, remove p.
+					nextmap.removeball(p.x, p.y);
+
+				}
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	private Directions getDirection() {
+
+		int h = mousein.y - mouseout.y;
+		int b = mousein.x - mouseout.x;
+
+		if (Math.abs(b) <= Math.abs(h)) {
+
+			// up
+			if (h >= 0) {
+				return Directions.UP;
+			} else {
+				return Directions.DOWN;
+			}
+
+		} else {
+
+			if (b <= 0) {
+				return Directions.RIGHT;
+			} else {
+				return Directions.LEFT;
+			}
+
+		}
+	}
+
+	private void move() {
+
+		Point p = getBoardPos(new Point(s_x + focusedpos.x * rectsize, s_y
+				+ focusedpos.y * rectsize));
+
+		// if no hit
+		if (balls_to_move == 0) {
+			// innanför kartan
+			if (p.x >= 0 && p.x <= map.x - 1 && p.y >= 0 && p.y <= map.y - 1) {
+
+				switch (direction) {
+				case UP:
+					s_y -= speed;
+					break;
+				case DOWN:
+					s_y += speed;
+					break;
+				case LEFT:
+					s_x -= speed;
+					break;
+				case RIGHT:
+					s_x += speed;
+					break;
+				default:
+					break;
+				}
+			} else {
+
+				moving = false;
+				s_x = 0;
+				s_y = 0;
+				map.addball(movingball.x, movingball.y, focusedball);
+
+			}
+
+			// if hit ( almost same code, splitted it to debug
+		} else {
+
+			if (p.x >= 0 && p.x <= map.x - 1 && p.y >= 0 && p.y <= map.y - 1) {
+
+				switch (direction) {
+				case UP:
+					if (p.y > 0) {
+						// see as next point
+						Point p2 = getBoardPos(new Point(s_x + focusedpos.x
+								* rectsize, s_y + focusedpos.y * rectsize
+								- speed));
+
+						// hit next?
+						if (!map.isEmpty(p2.x, p2.y)) {
+							boolean dothis = false;
+							for (Point k : balls_to_fix) {
+
+								// Two balls beside eachother
+								if (Math.abs(k.y - focusedpos.y) == 1) {
+									dothis = true;
+								}
+							}
+
+							if (dothis) {
+								moving = false;
+								s_x = 0;
+								s_y = 0;
+								map.addball(movingball.x, movingball.y,
+										focusedball);
+								break;
+							}
+
+							// If ordinary hit
+							map.addball(p.x, p.y, focusedball);
+							focusedball = map.getBall(p2.x, p2.y);
+							map.removeball(p.x, p.y - 1);
+							s_y -= rectsize;
+							dontmove = true;
+						}
+
+					}
+					if (!dontmove) {
+						s_y -= speed;
+
+					}
+					dontmove = false;
+
+					break;
+				case DOWN:
+					if (p.y < map.y - 1) {
+
+						Point p2 = getBoardPos(new Point(s_x + focusedpos.x
+								* rectsize, s_y + focusedpos.y * rectsize
+								+ rectsize));
+
+						if (!map.isEmpty(p2.x, p2.y)) {
+
+							boolean dothis = false;
+							for (Point k : balls_to_fix) {
+
+								if (Math.abs(k.y - focusedpos.y) == 1) {
+									dothis = true;
+								}
+							}
+							if (dothis) {
+								moving = false;
+								s_x = 0;
+								s_y = 0;
+								map.addball(movingball.x, movingball.y,
+										focusedball);
+								break;
+							}
+
+							map.addball(p.x, p.y, focusedball);
+							focusedball = map.getBall(p2.x, p2.y);
+							map.removeball(p.x, p.y + 1);
+							s_y += rectsize;
+							dontmove = true;
+						}
+
+					}
+					if (!dontmove) {
+						s_y += speed;
+
+					}
+					dontmove = false;
+					break;
+				case LEFT:
+					if (p.x > 0) {
+
+						Point p2 = getBoardPos(new Point(s_x + focusedpos.x
+								* rectsize - speed, s_y + focusedpos.y
+								* rectsize));
+
+						if (!map.isEmpty(p2.x, p2.y)) {
+
+							boolean dothis = false;
+							for (Point k : balls_to_fix) {
+
+								if (Math.abs(k.x - focusedpos.x) == 1) {
+									dothis = true;
+								}
+							}
+							if (dothis) {
+								// System.out.println(balls_to_move);
+								moving = false;
+								s_x = 0;
+								s_y = 0;
+								map.addball(movingball.x, movingball.y,
+										focusedball);
+								break;
+							}
+
+							map.addball(p.x, p.y, focusedball);
+							focusedball = map.getBall(p2.x, p2.y);
+							map.removeball(p.x - 1, p.y);
+							s_x -= rectsize;
+							dontmove = true;
+						}
+
+					}
+					if (!dontmove) {
+						s_x -= speed;
+
+					}
+					dontmove = false;
+					break;
+				case RIGHT:
+					if (p.x < map.x - 1) {
+
+						Point p2 = getBoardPos(new Point(s_x + focusedpos.x
+								* rectsize + rectsize, s_y + focusedpos.y
+								* rectsize));
+
+						if (!map.isEmpty(p2.x, p2.y)) {
+
+							boolean dothis = false;
+							for (Point k : balls_to_fix) {
+								if (Math.abs(k.x - focusedpos.x) == 1) {
+									dothis = true;
+								}
+							}
+							if (dothis) {
+								// System.out.println(balls_to_move);
+								moving = false;
+								s_x = 0;
+								s_y = 0;
+								map.addball(movingball.x, movingball.y,
+										focusedball);
+								break;
+							}
+
+							map.addball(p.x, p.y, focusedball);
+							focusedball = map.getBall(p2.x, p2.y);
+							map.removeball(p.x + 1, p.y);
+							s_x += rectsize;
+							dontmove = true;
+						}
+
+					}
+					if (!dontmove) {
+						s_x += speed;
+
+					}
+					dontmove = false;
+					break;
+				default:
+					break;
+				}
+			} else {
+
+				moving = false;
+				s_x = 0;
+				s_y = 0;
+
+			}
+
+		}
+	}
+
+	@Override
+	public void run() {
+
+		while (GameOver) {
+
+			// Time counter
+			long tEnd = System.currentTimeMillis();
+			long tDelta = tEnd - tStart;
+			double elapsedSeconds = tDelta / 1000.0;
+
+			if (gamemode == GameMode.TIMER) {
+				timeLeft = timeLeft - elapsedSeconds;
+				timeLabel = (Integer.toString((int) Math.round(timeLeft)));
+			} else {
+				timeLabel = (Integer.toString((int) Math.round(elapsedSeconds)));
+			}
+
+			// move
+			if (moving) {
+				move();
+			} else {
+				// handle gamemodes
+
+				switch (gamemode) {
+				case EDITORTEST:
+					if (map.ballsleft() == 1) {
+						GameOver = false;
+
+						System.out.println("You win in " + elapsedSeconds
+								+ " seconds.");
+						mapnumber++;
+						init();
+					}
+					break;
+				case NORMAL:
+					if (map.ballsleft() == 1) {
+						GameOver = false;
+
+						System.out.println("You win in " + elapsedSeconds
+								+ " seconds.");
+						mapnumber++;
+						init();
+					}
+				case TIMER:
+
+					if (nextmap.ballsleft() == 1) {
+						GameOver = false;
+
+						timeLeft = timeLeft - elapsedSeconds;
+
+						if (timeLeft <= 0) {
+
+							System.out.println("You completed "
+									+ (mapnumber - skipvar) + " maps.");
+
+						} else {
+
+							System.out.println("You finished map "
+									+ (mapnumber - skipvar) + " and have "
+									+ timeLeft + " seconds left.");
+							nextmap();
+						}
+					}
+					break;
+				default:
+					break;
+
+				}
+			}
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			repaint();
+		}
+
+	}
+
+	private void nextmap() {
+		focusedball = null;
+		focusedpos = null;
+		dontsave = false;
+		tempMaps.clear();
+
+		moving = false;
+		readMouse = false;
+		dontmove = false;
+		nohit = false;
+
+		nextmap = new Map(10, 10);
+		map = new Map(10, 10);
+
+		fixidenticalmap(maplist.get(mapnumber), map);
+		mapnumber++;
+
+		saveTemp(map);
+		fixidenticalmap(map, nextmap);
+		GameOver = true;
+		tStart = 0;
+		tStart = System.currentTimeMillis();
+		repaint();
+	}
+
+	public ArrayList<Point> getSolvepos() {
+		return new ArrayList<Point>();
+	}
+
+	public ArrayList<Directions> getSolvedirections() {
+		return new ArrayList<Directions>();
+	}
+
+	public List<Map> getTempMaps() {
+		return tempMaps;
+	}
+
+	private ArrayList<ArrayList<Directions>> saveEachCollision(Map _map) {
+
+		balldirections = new ArrayList<ArrayList<Directions>>();
+
+		for (Point p : _map.getBallList()) {
+			focusedpos = p;
+			focusedball = map.getBall(p.x, p.y);
+			balldirections.add(getCollisionDirections());
+
+		}
+		return balldirections;
+
+	}
+
+	private boolean noCollisions(ArrayList<ArrayList<Directions>> d) {
+
+		for (ArrayList<Directions> p : d) {
+			for (Directions q : p) {
+				if (q != null) {
+					return true;
+				}
+			}
+		}
+		return false;
+
+	}
+
+	private int getFirstPos(ArrayList<ArrayList<Directions>> d) {
+		int i = 0;
+		for (ArrayList<Directions> dd : d) {
+
+			if (dd.size() > 0 && dd != null) {
+				return i;
+			}
+			i++;
+		}
+		return 100;
+	}
+
+	private boolean rectSolve(ArrayList<Directions> d, Point ball, int level) {
+
+		// Ball poses in right order
+		if (balltemps.size() < level + 1) {
+
+			ArrayList<Point> a = new ArrayList<Point>();
+			for (Point p : nextmap.getBallList()) {
+				a.add(new Point(p.x, p.y));
+			}
+			balltemps.add(a);
+		}
+
+		// Get ball directions
+		balldirections = balldirectionsTemp.get(level);
+
+		// check if solved
+		if (nextmap.ballsleft() == 1) {
+			return true;
+
+		} else {
+
+			// Check is unsolveable
+			if (!noCollisions(balldirections) || lastonlevel) {
+				// unsolveable back
+
+				if (lastonlevel) {
+					lastonlevel = false;
+				}
+
+				if (level == 0) {
+					return false;
+				} else {
+
+					back();
+
+					balltemps.remove(level);
+
+					balldirectionsTemp.remove(level);
+
+					level--;
+
+					balldirections = balldirectionsTemp.get(level);
+
+					int pp = getFirstPos(balldirectionsTemp.get(level));
+
+					if (pp == 100) {
+						lastonlevel = true;
+						return rectSolve(new ArrayList<Directions>(), ball,
+								level);
+
+					} else {
+
+						return rectSolve(balldirections.get(pp),
+								balltemps.get(level).get(pp), level);
+					}
+				}
+
+			} else {
+
+				// if direction is empty
+				if (d.isEmpty()) {
+
+					int pp = getFirstPos(balldirectionsTemp.get(level));
+
+					return rectSolve(balldirections.get(pp),
+							balltemps.get(level).get(pp), level);
+
+				}
+
+				direction = d.get(0);
+				focusedpos = ball;
+				focusedball = nextmap.getBall(focusedpos.x, focusedpos.y);
+				d.remove(0);
+
+				balldirectionsTemp.remove(balldirectionsTemp.size() - 1);
+				balldirectionsTemp.add(balldirections);
+
+				collisions(direction, focusedpos,
+						nextmap.hitSome(direction, focusedpos));
+
+				saveTemp(nextmap);
+
+				level++;
+
+				balldirections = saveEachCollision(nextmap);
+
+				balldirectionsTemp.add(balldirections);
+
+				if (1 == nextmap.ballsleft()) {
+					return true;
+
+				} else {
+
+					int pp = getFirstPos(balldirections);
+
+					if (pp == 100) {
+						lastonlevel = true;
+						return rectSolve(new ArrayList<Directions>(), ball,
+								level);
+					} else {
+
+						return rectSolve(balldirections.get(pp), nextmap
+								.getBallList().get(pp), level);
+					}
+				}
+
+			}
+
+		}
+	}
+
+	public boolean solve() {
+
+		if (map.ballsleft() > 1) {
+
+			saveTemp(nextmap);
+
+			balldirections = saveEachCollision(nextmap);
+			balldirectionsTemp.add(balldirections);
+
+			int level = 0;
+
+			return rectSolve(balldirections.get(0), map.getBallList().get(0),
+					level);
+
+		}
+		return true;
+
+	}
+
+	// returns directions that have collisions from each ball on map
+	private ArrayList<Directions> getCollisionDirections() {
+		ArrayList<Point> k;
+		ArrayList<Directions> d = new ArrayList<Directions>();
+
+		direction = Directions.RIGHT;
+		k = nextmap.hitSome(direction, focusedpos);
+		if (k != null) {
+			if (nextmap.isEmpty(focusedpos.x + 1, focusedpos.y)) {
+				d.add(direction);
+			}
+		}
+		direction = Directions.DOWN;
+		k = nextmap.hitSome(direction, focusedpos);
+		if (k != null) {
+			if (nextmap.isEmpty(focusedpos.x, focusedpos.y + 1)) {
+				d.add(direction);
+			}
+		}
+		direction = Directions.LEFT;
+
+		k = nextmap.hitSome(direction, focusedpos);
+		if (k != null) {
+			if (nextmap.isEmpty(focusedpos.x - 1, focusedpos.y)) {
+				d.add(direction);
+			}
+		}
+		direction = Directions.UP;
+		k = nextmap.hitSome(direction, focusedpos);
+		if (k != null) {
+			if (nextmap.isEmpty(focusedpos.x, focusedpos.y - 1)) {
+				d.add(direction);
+			}
+		}
+		return d;
+
+	}
+
+}

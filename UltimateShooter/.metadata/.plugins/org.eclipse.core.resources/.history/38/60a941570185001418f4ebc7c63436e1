@@ -1,0 +1,22 @@
+package Start;
+
+
+
+import Editor.EditorFrame;
+import Game.GameFrame;
+
+public class Start {
+
+	/**
+	 * Starting the program, 
+	 * @param args
+	 */
+	public static void main(String[] args) {
+	//	new EditorFrame();
+
+	//	new GameFrame();
+		
+		new Window();
+
+	}
+}

@@ -1,0 +1,33 @@
+2014-12-17 00:16:34,127 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.SwitchStatement as parent of completion location.
+2014-12-17 00:59:20,796 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.SwitchStatement as parent of completion location.
+2014-12-18 09:28:03,559 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.SwitchStatement as parent of completion location.
+2015-01-02 04:02:01,887 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.BinaryExpression as parent of completion location.
+2015-01-26 16:36:04,113 [Worker-9] ERROR o.e.r.m.a.MavenCentralFingerprintSearchAdvisor - Exception when querying Solr Server <http://search.maven.org/solrsearch>
+org.apache.solr.client.solrj.SolrServerException: Error executing query
+	at org.apache.solr.client.solrj.request.QueryRequest.process(QueryRequest.java:95) ~[na:na]
+	at org.apache.solr.client.solrj.SolrServer.query(SolrServer.java:266) ~[org.apache.solr.client.solrj_3.5.0.v20120530-0900.jar:na]
+	at org.eclipse.recommenders.models.advisors.MavenCentralFingerprintSearchAdvisor.doSuggest(MavenCentralFingerprintSearchAdvisor.java:91) ~[org.eclipse.recommenders.models_2.1.9.v20140917-1240.jar:na]
+	at org.eclipse.recommenders.models.advisors.AbstractProjectCoordinateAdvisor.suggest(AbstractProjectCoordinateAdvisor.java:29) [org.eclipse.recommenders.models_2.1.9.v20140917-1240.jar:na]
+	at org.eclipse.recommenders.models.rcp.advisors.EclipseMavenCentralFingerprintSearchAdvisor.suggest(EclipseMavenCentralFingerprintSearchAdvisor.java:55) [org.eclipse.recommenders.models.rcp_2.1.9.v20140917-1240.jar:na]
+	at org.eclipse.recommenders.models.advisors.ProjectCoordinateAdvisorService.suggest(ProjectCoordinateAdvisorService.java:52) [org.eclipse.recommenders.models_2.1.9.v20140917-1240.jar:na]
+	at org.eclipse.recommenders.internal.models.rcp.EclipseProjectCoordinateAdvisorService$2.load(EclipseProjectCoordinateAdvisorService.java:101) [org.eclipse.recommenders.models.rcp_2.1.9.v20140917-1240.jar:na]
+	at org.eclipse.recommenders.internal.models.rcp.EclipseProjectCoordinateAdvisorService$2.load(EclipseProjectCoordinateAdvisorService.java:1) [org.eclipse.recommenders.models.rcp_2.1.9.v20140917-1240.jar:na]
+	at com.google.common.cache.CacheLoader.reload(CacheLoader.java:94) [com.google.guava_15.0.0.v201403281430.jar:na]
+	at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3525) [com.google.guava_15.0.0.v201403281430.jar:na]
+	at com.google.common.cache.LocalCache$Segment.loadAsync(LocalCache.java:2321) [com.google.guava_15.0.0.v201403281430.jar:na]
+	at com.google.common.cache.LocalCache$Segment.refresh(LocalCache.java:2385) [com.google.guava_15.0.0.v201403281430.jar:na]
+	at com.google.common.cache.LocalCache.refresh(LocalCache.java:4085) [com.google.guava_15.0.0.v201403281430.jar:na]
+	at com.google.common.cache.LocalCache$LocalLoadingCache.refresh(LocalCache.java:4825) [com.google.guava_15.0.0.v201403281430.jar:na]
+	at org.eclipse.recommenders.internal.models.rcp.EclipseProjectCoordinateAdvisorService$RefreshProjectCoordinatesJob.run(EclipseProjectCoordinateAdvisorService.java:209) [org.eclipse.recommenders.models.rcp_2.1.9.v20140917-1240.jar:na]
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:54) [org.eclipse.core.jobs_3.6.0.v20140424-0053.jar:na]
+Caused by: org.apache.solr.common.SolrException: Bad Request
+
+Bad Request
+
+request: http://search.maven.org/solrsearch/select?q=1:"e8a7bc347bea23d7535251c0728dff0e4f3f1c61"&rows=1&wt=xml&version=2.2
+	at org.apache.solr.client.solrj.impl.CommonsHttpSolrServer.request(CommonsHttpSolrServer.java:432) ~[org.apache.solr.client.solrj_3.5.0.v20120530-0900.jar:na]
+	at org.apache.solr.client.solrj.impl.CommonsHttpSolrServer.request(CommonsHttpSolrServer.java:246) ~[org.apache.solr.client.solrj_3.5.0.v20120530-0900.jar:na]
+	at org.apache.solr.client.solrj.request.QueryRequest.process(QueryRequest.java:89) ~[na:na]
+	... 15 common frames omitted
+2015-01-26 21:35:50,400 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.IfStatement as parent of completion location.
+2015-03-19 17:30:43,161 [main] WARN  o.e.r.i.c.rcp.TypeBindingAnalyzer - Can't handle class org.eclipse.jdt.internal.compiler.ast.CombinedBinaryExpression as parent of completion location.

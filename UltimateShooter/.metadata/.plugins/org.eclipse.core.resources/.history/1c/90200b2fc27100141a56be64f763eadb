@@ -1,0 +1,191 @@
+package Maps;
+
+import java.awt.Point;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+
+import Enums.Balls;
+import Enums.Directions;
+
+public class Map {
+
+	public String name;
+	public int x, y;
+	Balls[][] map;
+	ArrayList<Point> ballplaces = new ArrayList<Point>();
+
+	public Map(int _x, int _y) {
+		x = _x;
+		y = _y;
+
+		create_map();
+	}
+
+	public ArrayList<Point> getBallList() {
+		return ballplaces;
+	}
+
+	public Balls[][] getMap() {
+		return map;
+	}
+
+	public Balls getBall(int _x, int _y) {
+		return map[_x][_y];
+	}
+
+	public int ballsleft() {
+		return ballplaces.size();
+	}
+
+	private void create_map() {
+
+		map = new Balls[x][y];
+
+		for (int i = 0; i < x; i++) {
+			for (int j = 0; j < y; j++) {
+				map[i][j] = Balls.EMPTY;
+			}
+		}
+	}
+	
+	
+	
+	// one sort for down, up, left, right
+	private void sort_ball_list(Directions d) {
+
+		
+		switch (d) {
+		case UP:
+			// reverse a sorted ballList on y
+			
+			
+			break;
+		case DOWN:
+			// sort the ballList on y
+			Collections.sort(ballplaces, new PointCompare());
+			
+			break;
+		case LEFT:
+			// reverse a sorted ballList on x
+
+			break;
+		case RIGHT:
+			// sort the ballList on x
+			Collections.sort(ballplaces, new PointCompare());
+			
+			
+			break;
+		}
+
+	}
+
+	public void addball(int x_, int y_, Balls ball) {
+		if (ball == Balls.EMPTY) {
+			return;
+		} else {
+			map[x_][y_] = ball;
+			ballplaces.add(new Point(x_, y_));
+		}
+	}
+
+	public void removeball(int _x, int _y) {
+		if (map[_x][_y] == Balls.EMPTY) {
+			return;
+		} else {
+			map[_x][_y] = Balls.EMPTY;
+			ballplaces.remove(new Point(_x, _y));
+		}
+	}
+
+	public boolean isEmpty(int _x, int _y) {
+		if (map[_x][_y] == Balls.EMPTY) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public ArrayList<Point> hitSome(Directions d, Point p) {
+		switch (d) {
+		case UP:
+			return hitOver(p.x, p.y);
+
+		case DOWN:
+			return hitUnder(p.x, p.y);
+
+		case LEFT:
+			return hitLeft(p.x, p.y);
+
+		case RIGHT:
+			return hitRight(p.x, p.y);
+
+		}
+		return null;
+
+	}
+
+	// check hits
+	private ArrayList<Point> hitUnder(int _x, int _y) {
+		ArrayList<Point> k = new ArrayList<Point>();
+		for (Point p : ballplaces) {
+			if (p.x == _x && p.y > _y) {
+				k.add(p);
+			}
+		}
+		if (k.isEmpty()) {
+			return null;
+		} else {
+			return k;
+		}
+	}
+
+	private ArrayList<Point> hitOver(int _x, int _y) {
+		ArrayList<Point> k = new ArrayList<Point>();
+
+		for (Point p : ballplaces) {
+			if (p.x == _x && p.y < _y) {
+				k.add(p);
+			}
+		}
+		if (k.isEmpty()) {
+			return null;
+		} else {
+			return k;
+		}
+	}
+
+	private ArrayList<Point> hitLeft(int _x, int _y) {
+		ArrayList<Point> k = new ArrayList<Point>();
+		for (Point p : ballplaces) {
+			if (p.x < _x && p.y == _y) {
+				k.add(p);
+			}
+		}
+		if (k.isEmpty()) {
+			return null;
+		} else {
+			return k;
+		}
+	}
+
+	private ArrayList<Point> hitRight(int _x, int _y) {
+		ArrayList<Point> k = new ArrayList<Point>();
+		for (Point p : ballplaces) {
+			if (p.x > _x && p.y == _y) {
+				k.add(p);
+			}
+		}
+		
+		// sort k
+		
+		if (k.isEmpty()) {
+			return null;
+		} else {
+			return k;
+		}
+	}
+}
+

@@ -1,0 +1,74 @@
+package Start;
+
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import Editor.Editor;
+import Enums.Balls;
+import Enums.GameMode;
+import Enums.MenyStatus;
+import Game.Game;
+import Panels.EditorPanel;
+import Panels.GamePanel;
+import Panels.MainPanel;
+import Panels.SettingsPanel;
+
+public class Window extends JFrame  {
+
+	MenyStatus status = MenyStatus.MAINPANEL;
+	
+	
+	public Window() {
+		// default
+		this.setTitle("Ultimate Shooter");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		MainPanel meny = new MainPanel(this);
+		add(meny);
+
+		setSize(600,600);
+		setVisible(true);
+
+	}
+
+	public void changePanel(MenyStatus status) {
+		
+		this.removeAll();
+
+		switch (status) {
+		case GAMEPANEL:
+			GamePanel game = new GamePanel(this);
+			add(game);
+			break;
+
+		case EDITORPANEL:
+			EditorPanel edit = new EditorPanel(this);
+			add(edit);
+			break;
+
+		case SETTINGPANEL:
+			SettingsPanel setting = new SettingsPanel(this);
+			add(setting);
+			break;
+
+		case MAINPANEL:
+			MainPanel meny = new MainPanel(this);
+			add(meny);
+		}
+		pack();
+		setSize(600,600);
+	}
+
+}

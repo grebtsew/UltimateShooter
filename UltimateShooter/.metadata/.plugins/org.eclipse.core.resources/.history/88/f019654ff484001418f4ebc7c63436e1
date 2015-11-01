@@ -1,0 +1,83 @@
+package Panels;
+
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.GridLayout;
+import java.awt.Label;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import Enums.Balls;
+import Enums.MenyStatus;
+import Game.Game;
+import Start.Window;
+
+public class GamePanel extends JPanel implements ActionListener {
+
+	Window frame;
+
+	// GamePanel
+	JPanel gamepanel = new JPanel();
+	Game game;
+	Button back = new Button("Back");
+	Button next = new Button("Next");
+	Button meny = new Button("Meny");
+
+	public GamePanel(Window _frame) {
+
+		frame = _frame;
+
+		Label line1 = new Label("Game");
+
+		setLayout(new GridLayout(2, 1));
+
+		add(line1);
+		add(back);
+
+		back.addActionListener(this);
+
+		makeGamePanel();
+
+		setVisible(true);
+		setSize(600, 600);
+
+		back.addActionListener(this);
+		next.addActionListener(this);
+	}
+
+	private void makeGamePanel() {
+		// game = new Game(GameMode.TIMER);
+
+		JPanel borderpanel = new JPanel(new BorderLayout());
+		// borderpanel.add(game, BorderLayout.CENTER);
+
+		JPanel buttonpanel = new JPanel(new GridLayout(1, 2));
+		buttonpanel.add(next);
+		buttonpanel.add(back);
+
+		borderpanel.add(buttonpanel, BorderLayout.SOUTH);
+
+		gamepanel.add(borderpanel);
+
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		switch (e.getActionCommand()) {
+		case "Back":
+			game.back();
+			break;
+		case "Meny":
+			frame.changePanel(MenyStatus.MAINPANEL);
+			break;
+		case "Next":
+			game.next();
+			break;
+
+		}
+	}
+
+}

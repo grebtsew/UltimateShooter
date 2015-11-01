@@ -1,0 +1,189 @@
+package Panels;
+
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Label;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+
+import Editor.Editor;
+import Enums.Balls;
+import Enums.MenyStatus;
+import Start.Window;
+
+public class EditorPanel extends JPanel implements ActionListener {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	// EditorPanel
+	JPanel solvepanel = new JPanel(new GridLayout(1, 2));
+	JPanel mainpanel = new JPanel(new BorderLayout());
+	JPanel eastpanel = new JPanel(new GridLayout(7, 1));
+	JPanel editorpanel = new JPanel();
+	JPanel autopanel = new JPanel(new GridLayout(1, 5));
+
+	Editor editor = new Editor();
+	
+	Label asave = new Label("AutoSave");
+
+	 boolean saveallmaps = false;
+
+	Button clear = new Button("Clear");
+	Button save = new Button("Save");
+	Button solve = new Button("Solve");
+	Button autocreate = new Button("AutoCreate");
+	Button meny = new Button("Meny");
+	Button removeall = new Button("Remove maps");
+
+	Dimension d = new Dimension(650,400);
+	
+	JCheckBox jcb = new JCheckBox();
+
+	TextField tf = new TextField();
+	TextField tf2 = new TextField();
+
+	Label l = new Label("untested");
+	int level = 0;
+	boolean solveable = false;
+
+	JComboBox<Balls> cb = new JComboBox<Balls>(new DefaultComboBoxModel<>(
+			Balls.values()));
+
+	Window frame;
+	Button back = new Button("Back");
+
+	public EditorPanel(Window _frame) {
+
+		frame = _frame;
+
+		// set up editorpanel
+		makeEditorPanel();
+
+		setLayout(new BorderLayout());
+		add(editor, BorderLayout.CENTER);
+		add(editorpanel, BorderLayout.EAST);
+
+		jcb.addActionListener(this);
+		removeall.addActionListener(this);
+		meny.addActionListener(this);
+		autocreate.addActionListener(this);
+		clear.addActionListener(this);
+		cb.addActionListener(this);
+		save.addActionListener(this);
+		solve.addActionListener(this);
+		back.addActionListener(this);
+
+	}
+	
+	public Dimension getSize(){
+		return d;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		if (e.getSource() == jcb) {
+			if (jcb.isSelected()) {
+				saveallmaps = true;
+			} else {
+				saveallmaps = false;
+			}
+
+		}
+
+		switch (e.getActionCommand()) {
+
+		case "Remove maps":
+			editor.removeMaps();
+			break;
+		case "Meny":
+			frame.changePanel(MenyStatus.MAINPANEL);
+			break;
+		case "Save":
+			editor.save();
+			break;
+		case "Solve":
+			solveable = editor.solve();
+			this.changelabel();
+			break;
+		case "Exit":
+			System.exit(0);
+			break;
+		case "Play":
+			break;
+		case "comboBoxChanged":
+			editor.setfocusball((Balls) cb.getSelectedItem());
+			break;
+		case "Clear":
+			editor.clear();
+			break;
+		case "AutoCreate":
+			if (isInteger(tf.getText()) && isInteger(tf2.getText())) {
+				editor.autocreate(Integer.parseInt((tf.getText())),
+						Integer.parseInt(tf2.getText()), saveallmaps );
+			}
+			break;
+
+		}
+	}
+
+	private void makeEditorPanel() {
+
+		tf.setText("Amount");
+		tf2.setText("Level");
+		editor.focusedball = (Balls) cb.getSelectedItem();
+
+		solvepanel.add(solve);
+		solvepanel.add(l);
+
+		autopanel.add(jcb);
+		autopanel.add(tf);
+		autopanel.add(autocreate);
+		autopanel.add(tf2);
+
+		eastpanel.add(clear);
+		eastpanel.add(save);
+		eastpanel.add(solvepanel);
+		eastpanel.add(cb);
+		eastpanel.add(autopanel);
+		eastpanel.add(removeall);
+		eastpanel.add(meny);
+
+		mainpanel.add(editor, BorderLayout.CENTER);
+		mainpanel.add(eastpanel, BorderLayout.EAST);
+
+		editorpanel.add(mainpanel);
+
+	}
+
+	private void changelabel() {
+		if (solveable) {
+			l.setText("Solveable");
+		} else {
+			l.setText("UnSolveable");
+		}
+	}
+
+	private static boolean isInteger(String s) {
+		try {
+			Integer.parseInt(s);
+		} catch (NumberFormatException e) {
+			System.out.println("no integer");
+			return false;
+
+		}
+		// only got here if we didn't return false
+		return true;
+	}
+
+}
